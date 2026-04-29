@@ -2,46 +2,66 @@
 <html>
 <head>
     <title>SENTINEL PRIME // CMD_HUD</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --neon: #00f2fe; --bg: #050505; --card: #0a0a0c; }
-        body { background: var(--bg); color: var(--neon); font-family: 'Courier New', monospace; padding: 20px; }
-        .header { border-bottom: 2px solid var(--neon); padding-bottom: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        :root { --neon: #00f2fe; --bg: #050505; --card: #0a0a0c; --alert: #ff3131; }
+        body { background: var(--bg); color: var(--neon); font-family: 'Courier New', monospace; padding: 20px; margin: 0; }
+        .header { border-bottom: 2px solid var(--neon); padding: 10px 0; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .box { background: var(--card); border: 1px solid #1a1a1a; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; font-size: 11px; }
-        th { text-align: left; color: #555; border-bottom: 1px solid #222; }
+        .box { background: var(--card); border: 1px solid #1a1a1a; padding: 15px; border-radius: 5px; box-shadow: 0 0 15px rgba(0,242,254,0.05); }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; }
+        th { text-align: left; color: #555; border-bottom: 1px solid #222; padding: 5px; }
         td { padding: 8px 5px; border-bottom: 1px solid #111; }
-        .btn { background: none; border: 1px solid var(--neon); color: var(--neon); cursor: pointer; padding: 8px; font-family: monospace; }
-        input { background: #000; border: 1px solid #333; color: var(--neon); padding: 5px; width: 80%; margin-bottom: 10px; }
+        .btn { background: none; border: 1px solid var(--neon); color: var(--neon); cursor: pointer; padding: 10px; font-family: monospace; transition: 0.3s; }
+        .btn:hover { background: var(--neon); color: #000; box-shadow: 0 0 10px var(--neon); }
+        input { background: #000; border: 1px solid #333; color: var(--neon); padding: 8px; width: 70%; margin-bottom: 10px; font-family: monospace; }
+        canvas { max-height: 200px; }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>SENTINEL PRIME // CMD_HUD</h1>
-        <button class="btn" onclick="fetch('/api/scan')">>_ INITIATE_SCAN</button>
-    </div>
-
-    <div class="box">
-        <h2>>_ VAULT_X (CRYPTOGRAPHIC_CONTROL)</h2>
-        <input type="text" id="file-path" placeholder="C:/path/to/file.txt">
-        <input type="password" id="file-pass" placeholder="VAULT_PASSWORD">
-        <br>
-        <button class="btn" onclick="vaultAction('encrypt')">ENCRYPT_FILE</button>
-        <button class="btn" onclick="vaultAction('decrypt')" style="border-color:#ff3131; color:#ff3131;">DECRYPT_FILE</button>
+        <h1 style="letter-spacing: 5px; margin:0;">SENTINEL PRIME // V1.5</h1>
+        <div>
+            <button class="btn" onclick="fetch('/api/scan')">>_ NETWORK_SCAN</button>
+        </div>
     </div>
 
     <div class="grid">
         <div class="box">
-            <h2>>_ LIVE_TRAFFIC</h2>
-            <table><thead><tr><th>TIME</th><th>SRC</th><th>DST</th><th>PROTO</th></tr></thead><tbody id="traffic"></tbody></table>
+            <h2 style="color:#fff;">>_ VAULT_X (AES-256)</h2>
+            <input type="text" id="file-path" placeholder="FULL_FILE_PATH">
+            <input type="password" id="file-pass" placeholder="SECRET_KEY">
+            <div style="margin-top:10px;">
+                <button class="btn" onclick="vaultAction('encrypt')">ENCRYPT</button>
+                <button class="btn" onclick="vaultAction('decrypt')" style="border-color:var(--alert); color:var(--alert);">DECRYPT</button>
+            </div>
         </div>
+
+        <div class="box">
+            <h2 style="color:#fff;">>_ TRAFFIC_ANALYTICS</h2>
+            <canvas id="protocolChart"></canvas>
+        </div>
+
+        <div class="box">
+            <h2>>_ LIVE_TRAFFIC</h2>
+            <table>
+                <thead><tr><th>TIME</th><th>SRC</th><th>DST</th><th>PROTO</th></tr></thead>
+                <tbody id="traffic"></tbody>
+            </table>
+        </div>
+
         <div class="box">
             <h2>>_ DISCOVERED_DEVICES</h2>
-            <table><thead><tr><th>IP_ADDR</th><th>STATUS</th><th>OPEN_PORTS</th></tr></thead><tbody id="devices"></tbody></table>
+            <table>
+                <thead><tr><th>IP_ADDR</th><th>STATUS</th><th>OPEN_PORTS</th></tr></thead>
+                <tbody id="devices"></tbody>
+            </table>
         </div>
     </div>
 
     <script>
+        let protocolChart;
+
         function vaultAction(type) {
             const path = document.getElementById('file-path').value;
             const password = document.getElementById('file-pass').value;
@@ -52,15 +72,47 @@
             }).then(r => r.json()).then(d => alert(d.message));
         }
 
+        function initChart() {
+            const ctx = document.getElementById('protocolChart').getContext('2d');
+            protocolChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['TCP', 'UDP', 'ICMP'],
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: ['#00f2fe', '#7117ea', '#ff3131'],
+                        borderColor: '#050505',
+                        borderWidth: 2
+                    }]
+                },
+                options: { 
+                    responsive: true,
+                    plugins: { legend: { labels: { color: '#00f2fe', font: { family: 'monospace' } } } }
+                }
+            });
+        }
+
         function updateUI() {
+            // Traffic Update
             fetch('/api/traffic').then(r => r.json()).then(data => {
                 document.getElementById('traffic').innerHTML = data.map(x => `<tr><td>${x.timestamp.split(' ')[1]}</td><td>${x.src_ip}</td><td>${x.dst_ip}</td><td>${x.protocol}</td></tr>`).join('');
             });
+
+            // Devices Update
             fetch('/api/devices').then(r => r.json()).then(data => {
-                document.getElementById('devices').innerHTML = data.map(x => `<tr><td>${x.ip}</td><td style="color:#39ff14">UP</td><td>${x.ports}</td></tr>`).join('');
+                document.getElementById('devices').innerHTML = data.map(x => `<tr><td>${x.ip}</td><td style="color:#39ff14">ONLINE</td><td>${x.ports}</td></tr>`).join('');
+            });
+
+            // Stats Update for Chart
+            fetch('/api/stats').then(r => r.json()).then(data => {
+                protocolChart.data.datasets[0].data = [data.TCP || 0, data.UDP || 0, data.ICMP || 0];
+                protocolChart.update();
             });
         }
-        setInterval(updateUI, 3000); updateUI();
+
+        initChart();
+        setInterval(updateUI, 3000);
+        updateUI();
     </script>
 </body>
 </html>
