@@ -42,11 +42,10 @@ def get_devices():
 
 @app.route('/api/scan')
 def trigger_scan():
-    # Background scan thread
     thread = threading.Thread(target=scan_network, args=("10.106.204.0/24",))
     thread.daemon = True
     thread.start()
-    return jsonify({"status": "Scan started in background"})
+    return jsonify({"status": "Scan initiated in background"})
 
 if __name__ == '__main__':
     socketio.run(app, debug=True, port=5000)

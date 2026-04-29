@@ -12,7 +12,12 @@ def init_scout_db():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    # IP ko UNIQUE rakha hai taaki duplicates na aayein
+    
+    # PEHLE PURANI TABLE DROP KARENGE (TAAKI DUPLICATES KHATAM HO JAYEIN)
+    # Note: Agar data important hai toh ye line hata sakte ho, 
+    # par duplicates hatane ke liye ye ek baar karna zaroori hai.
+    # c.execute('DROP TABLE IF EXISTS devices') 
+
     c.execute('''CREATE TABLE IF NOT EXISTS devices 
                  (id INTEGER PRIMARY KEY AUTOINCREMENT, 
                   ip TEXT UNIQUE, 
@@ -40,10 +45,10 @@ def scan_network(network_range):
             ports = ",".join([str(p) for p in nm[host].all_tcp()])
             ts = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-            # INSERT OR REPLACE duplicates ko handle karega
+            # INSERT OR REPLACE duplicates ko handle karega (UNIQUE constraint ki wajah se)
             c.execute("INSERT OR REPLACE INTO devices (ip, hostname, status, ports, last_seen) VALUES (?,?,?,?,?)",
                       (ip, hostname, status, ports, ts))
-            print(f"[+] Discovered: {ip} | Status: {status}")
+            print(f"[+] Discovered/Updated: {ip} | Status: {status}")
 
         conn.commit()
         conn.close()

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>SENTINEL PRIME // HUD</title>
+    <title>SENTINEL PRIME // CMD_HUD</title>
     <style>
         :root { --neon: #00f2fe; --bg: #050505; --card: #0a0a0c; }
         body { background: var(--bg); color: var(--neon); font-family: 'Courier New', monospace; padding: 20px; }
@@ -15,7 +15,7 @@
         .btn { background: none; border: 1px solid var(--neon); color: var(--neon); cursor: pointer; padding: 8px 15px; font-family: monospace; }
         .btn:hover { background: var(--neon); color: #000; }
         .risk-low { color: #39ff14; }
-        pre { background: #000; padding: 10px; border: 1px solid #222; color: #888; font-size: 13px; }
+        pre { background: #000; padding: 10px; border: 1px solid #222; color: #888; font-size: 13px; max-height: 200px; overflow: auto; }
     </style>
 </head>
 <body>
@@ -48,47 +48,32 @@
     <script>
         function triggerScan() {
             fetch('/api/scan').then(r => r.json()).then(d => {
-                alert("Scout Engine Triggered: " + d.status);
+                console.log("Scan Result:", d.status);
             });
         }
 
         function updateUI() {
-            // Traffic Update
             fetch('/api/traffic').then(r => r.json()).then(data => {
                 let html = "";
                 data.forEach(x => {
-                    html += `<tr>
-                        <td>${x.timestamp.split(' ')[1]}</td>
-                        <td>${x.src_ip}</td>
-                        <td>${x.dst_ip}</td>
-                        <td>${x.protocol}</td>
-                        <td class="risk-low">${x.risk_level}</td>
-                    </tr>`;
+                    html += `<tr><td>${x.timestamp.split(' ')[1]}</td><td>${x.src_ip}</td><td>${x.dst_ip}</td><td>${x.protocol}</td><td class="risk-low">${x.risk_level}</td></tr>`;
                 });
                 document.getElementById('traffic-body').innerHTML = html;
             });
 
-            // Devices Update
             fetch('/api/devices').then(r => r.json()).then(data => {
                 let html = "";
                 data.forEach(x => {
-                    html += `<tr>
-                        <td>${x.ip}</td>
-                        <td>${x.hostname || 'N/A'}</td>
-                        <td style="color:#39ff14">${x.status.toUpperCase()}</td>
-                        <td style="color:#ffae00">${x.ports || 'SCANNING...'}</td>
-                    </tr>`;
+                    html += `<tr><td>${x.ip}</td><td>${x.hostname || 'N/A'}</td><td style="color:#39ff14">UP</td><td style="color:#ffae00">${x.ports || 'SCANNING...'}</td></tr>`;
                 });
                 document.getElementById('device-body').innerHTML = html;
             });
 
-            // Stats Update
             fetch('/api/stats').then(r => r.json()).then(data => {
                 document.getElementById('stats-json').innerHTML = JSON.stringify(data, null, 2);
             });
         }
 
-        // Refresh HUD every 3 seconds
         setInterval(updateUI, 3000);
         updateUI();
     </script>
