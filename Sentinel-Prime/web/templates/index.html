@@ -1,89 +1,75 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>SENTINEL PRIME // Command Center</title>
+    <title>SENTINEL PRIME // HUD</title>
     <style>
         :root { --neon: #00f2fe; --bg: #050505; --card: #0a0a0c; }
-        body { background: var(--bg); color: var(--neon); font-family: 'Courier New', monospace; margin: 0; padding: 20px; overflow-x: hidden; }
-        .header { border-bottom: 2px solid var(--neon); padding-bottom: 10px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
-        .grid { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; }
-        .box { background: var(--card); border: 1px solid #1a1a1a; padding: 20px; border-radius: 5px; box-shadow: 0 0 15px rgba(0, 242, 254, 0.05); }
-        h2 { font-size: 1rem; margin-top: 0; color: #fff; border-left: 3px solid var(--neon); padding-left: 10px; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 15px; }
-        th { text-align: left; color: #555; padding: 10px; border-bottom: 1px solid #222; }
-        td { padding: 10px; border-bottom: 1px solid #111; }
+        body { background: var(--bg); color: var(--neon); font-family: monospace; padding: 20px; }
+        .header { border-bottom: 2px solid var(--neon); padding-bottom: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .box { background: var(--card); border: 1px solid #1a1a1a; padding: 15px; border-radius: 5px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; }
+        th { text-align: left; color: #555; border-bottom: 1px solid #222; }
+        td { padding: 6px 0; border-bottom: 1px solid #111; }
+        .btn { background: none; border: 1px solid var(--neon); color: var(--neon); cursor: pointer; padding: 5px 10px; }
+        .btn:hover { background: var(--neon); color: #000; }
         .risk-low { color: #39ff14; }
-        .risk-medium { color: #ffae00; text-shadow: 0 0 5px #ffae00; }
-        .risk-high { color: #ff3131; text-shadow: 0 0 8px #ff3131; }
-        .scanner-line { width: 100%; height: 2px; background: var(--neon); opacity: 0.3; position: relative; animation: scan 3s infinite linear; }
-        @keyframes scan { 0% { top: 0; } 100% { top: 100px; } }
     </style>
 </head>
 <body>
     <div class="header">
-        <div style="font-size: 1.5rem; font-weight: bold; letter-spacing: 5px;">SENTINEL PRIME // V1.0</div>
-        <div id="status" style="color: #39ff14;">● ENGINE_ACTIVE</div>
+        <div style="font-size: 1.2rem; font-weight: bold;">SENTINEL PRIME // COMMAND_CENTER</div>
+        <button class="btn" onclick="triggerScan()">START_NETWORK_SCAN</button>
     </div>
 
     <div class="grid">
         <div class="box">
-            <h2>>_ LIVE PACKET INSPECTION</h2>
-            <div class="scanner-line"></div>
+            <h2>>_ LIVE_TRAFFIC_LOGS</h2>
             <table>
-                <thead>
-                    <tr>
-                        <th>TIMESTAMP</th>
-                        <th>SOURCE_IP</th>
-                        <th>DESTINATION_IP</th>
-                        <th>PROTOCOL</th>
-                        <th>RISK_LEVEL</th>
-                    </tr>
-                </thead>
-                <tbody id="traffic-logs">
-                    </tbody>
+                <thead><tr><th>TIME</th><th>SRC</th><th>DST</th><th>PROTO</th><th>RISK</th></tr></thead>
+                <tbody id="traffic-body"></tbody>
             </table>
         </div>
 
         <div class="box">
-            <h2>>_ PROTOCOL_DISTRIBUTION</h2>
-            <pre id="stats-view" style="color: #888; font-size: 14px; margin-top: 20px;"></pre>
-            <div style="margin-top: 40px;">
-                <h2>>_ SYSTEM_RESOURCES</h2>
-                <p style="font-size: 12px; color: #444;">MONITORING INTERFACE: eth0/wlan0<br>DATABASE: sentinel.db (ENCRYPTED)</p>
-            </div>
+            <h2>>_ DISCOVERED_DEVICES</h2>
+            <table>
+                <thead><tr><th>IP</th><th>HOSTNAME</th><th>STATUS</th><th>PORTS</th></tr></thead>
+                <tbody id="device-body"></tbody>
+            </table>
+            <h2 style="margin-top:20px;">>_ PROTOCOL_STATS</h2>
+            <pre id="stats-json" style="font-size: 14px; color:#888;"></pre>
         </div>
     </div>
 
     <script>
-        function updateDashboard() {
-            fetch('/api/traffic')
-                .then(response => response.json())
-                .then(data => {
-                    let rows = "";
-                    data.forEach(log => {
-                        let riskClass = "risk-" + log.risk_level.toLowerCase();
-                        rows += `<tr>
-                            <td>${log.timestamp.split(' ')[1]}</td>
-                            <td>${log.src_ip}</td>
-                            <td>${log.dst_ip}</td>
-                            <td>${log.protocol}</td>
-                            <td class="${riskClass}">${log.risk_level}</td>
-                        </tr>`;
-                    });
-                    document.getElementById('traffic-logs').innerHTML = rows;
-                });
-
-            fetch('/api/stats')
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('stats-view').innerHTML = JSON.stringify(data, null, 4);
-                });
+        function triggerScan() {
+            fetch('/api/scan').then(r => r.json()).then(d => alert(d.status));
         }
 
-        // Auto-refresh every 2 seconds
-        setInterval(updateDashboard, 2000);
-        updateDashboard();
+        function updateUI() {
+            // Update Traffic
+            fetch('/api/traffic').then(r => r.json()).then(data => {
+                let html = "";
+                data.forEach(x => html += `<tr><td>${x.timestamp.split(' ')[1]}</td><td>${x.src_ip}</td><td>${x.dst_ip}</td><td>${x.protocol}</td><td class="risk-low">${x.risk_level}</td></tr>`);
+                document.getElementById('traffic-body').innerHTML = html;
+            });
+
+            // Update Devices
+            fetch('/api/devices').then(r => r.json()).then(data => {
+                let html = "";
+                data.forEach(x => html += `<tr><td>${x.ip}</td><td>${x.hostname || 'NA'}</td><td style="color:#39ff14">UP</td><td style="color:#ffae00">${x.ports}</td></tr>`);
+                document.getElementById('device-body').innerHTML = html;
+            });
+
+            // Update Stats
+            fetch('/api/stats').then(r => r.json()).then(data => {
+                document.getElementById('stats-json').innerHTML = JSON.stringify(data, null, 2);
+            });
+        }
+
+        setInterval(updateUI, 3000);
+        updateUI();
     </script>
 </body>
 </html>

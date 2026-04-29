@@ -2,6 +2,8 @@ from flask import Flask, render_template, jsonify
 from flask_socketio import SocketIO
 import sqlite3
 import os
+import threading
+from core.scout import scan_network
 
 app = Flask(__name__, template_folder='web/templates', static_folder='web/static')
 socketio = SocketIO(app)
@@ -20,18 +22,31 @@ def index():
 @app.route('/api/traffic')
 def get_traffic():
     conn = get_db_connection()
-    # Sirf latest 50 packets uthao dashboard ke liye
-    traffic = conn.execute('SELECT * FROM traffic ORDER BY id DESC LIMIT 50').fetchall()
+    traffic = conn.execute('SELECT * FROM traffic ORDER BY id DESC LIMIT 20').fetchall()
     conn.close()
     return jsonify([dict(row) for row in traffic])
 
 @app.route('/api/stats')
 def get_stats():
     conn = get_db_connection()
-    stats = conn.execute('''SELECT protocol, COUNT(*) as count 
-                            FROM traffic GROUP BY protocol''').fetchall()
+    stats = conn.execute('SELECT protocol, COUNT(*) as count FROM traffic GROUP BY protocol').fetchall()
     conn.close()
     return jsonify({row['protocol']: row['count'] for row in stats})
+
+@app.route('/api/devices')
+def get_devices():
+    conn = get_db_connection()
+    devices = conn.execute('SELECT * FROM devices ORDER BY last_seen DESC').fetchall()
+    conn.close()
+    return jsonify([dict(row) for row in devices])
+
+@app.route('/api/scan')
+def trigger_scan():
+    # Background scan thread
+    thread = threading.Thread(target=scan_network, args=("10.106.204.0/24",))
+    thread.daemon = True
+    thread.start()
+    return jsonify({"status": "Scan started in background"})
 
 if __name__ == '__main__':
     socketio.run(app, debug=True, port=5000)
