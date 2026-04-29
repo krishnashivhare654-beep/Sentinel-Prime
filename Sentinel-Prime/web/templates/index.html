@@ -1,81 +1,51 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
     <title>SENTINEL PRIME // CMD_HUD</title>
     <style>
         :root { --neon: #00f2fe; --bg: #050505; --card: #0a0a0c; }
         body { background: var(--bg); color: var(--neon); font-family: 'Courier New', monospace; padding: 20px; }
         .header { border-bottom: 2px solid var(--neon); padding-bottom: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .box { background: var(--card); border: 1px solid #1a1a1a; padding: 15px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,242,254,0.1); }
+        .box { background: var(--card); border: 1px solid #1a1a1a; padding: 15px; border-radius: 5px; }
         table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; }
         th { text-align: left; color: #555; border-bottom: 1px solid #222; padding: 5px; }
         td { padding: 8px 5px; border-bottom: 1px solid #111; }
-        .btn { background: none; border: 1px solid var(--neon); color: var(--neon); cursor: pointer; padding: 8px 15px; font-family: monospace; }
+        .btn { background: none; border: 1px solid var(--neon); color: var(--neon); cursor: pointer; padding: 10px; font-family: monospace; }
         .btn:hover { background: var(--neon); color: #000; }
-        .risk-low { color: #39ff14; }
-        pre { background: #000; padding: 10px; border: 1px solid #222; color: #888; font-size: 13px; max-height: 200px; overflow: auto; }
     </style>
 </head>
 <body>
     <div class="header">
-        <div style="font-size: 1.5rem; font-weight: bold; letter-spacing: 3px;">SENTINEL PRIME // CMD_HUD</div>
-        <button class="btn" onclick="triggerScan()">>_ INITIATE_NETWORK_SCAN</button>
+        <h1 style="letter-spacing: 3px;">SENTINEL PRIME // CMD_HUD</h1>
+        <button class="btn" onclick="fetch('/api/scan').then(r=>r.json()).then(d=>alert(d.status))">>_ INITIATE_SCAN</button>
     </div>
-
     <div class="grid">
         <div class="box">
-            <h2 style="color:#fff; font-size:1rem;">>_ LIVE_PACKET_STREAM</h2>
+            <h2>>_ LIVE_TRAFFIC</h2>
             <table>
-                <thead><tr><th>TIME</th><th>SOURCE</th><th>DESTINATION</th><th>PROTO</th><th>RISK</th></tr></thead>
-                <tbody id="traffic-body"></tbody>
+                <thead><tr><th>TIME</th><th>SRC</th><th>DST</th><th>PROTO</th></tr></thead>
+                <tbody id="traffic"></tbody>
             </table>
         </div>
-
         <div class="box">
-            <h2 style="color:#fff; font-size:1rem;">>_ NETWORK_DISCOVERY</h2>
+            <h2>>_ DISCOVERED_DEVICES</h2>
             <table>
-                <thead><tr><th>IP_ADDR</th><th>HOSTNAME</th><th>STATUS</th><th>OPEN_PORTS</th></tr></thead>
-                <tbody id="device-body"></tbody>
+                <thead><tr><th>IP_ADDR</th><th>STATUS</th><th>OPEN_PORTS</th></tr></thead>
+                <tbody id="devices"></tbody>
             </table>
-            
-            <h2 style="color:#fff; font-size:1rem; margin-top:30px;">>_ PROTOCOL_STATS</h2>
-            <pre id="stats-json"></pre>
         </div>
     </div>
-
     <script>
-        function triggerScan() {
-            fetch('/api/scan').then(r => r.json()).then(d => {
-                console.log("Scan Result:", d.status);
-            });
-        }
-
         function updateUI() {
             fetch('/api/traffic').then(r => r.json()).then(data => {
-                let html = "";
-                data.forEach(x => {
-                    html += `<tr><td>${x.timestamp.split(' ')[1]}</td><td>${x.src_ip}</td><td>${x.dst_ip}</td><td>${x.protocol}</td><td class="risk-low">${x.risk_level}</td></tr>`;
-                });
-                document.getElementById('traffic-body').innerHTML = html;
+                document.getElementById('traffic').innerHTML = data.map(x => `<tr><td>${x.timestamp.split(' ')[1]}</td><td>${x.src_ip}</td><td>${x.dst_ip}</td><td>${x.protocol}</td></tr>`).join('');
             });
-
             fetch('/api/devices').then(r => r.json()).then(data => {
-                let html = "";
-                data.forEach(x => {
-                    html += `<tr><td>${x.ip}</td><td>${x.hostname || 'N/A'}</td><td style="color:#39ff14">UP</td><td style="color:#ffae00">${x.ports || 'SCANNING...'}</td></tr>`;
-                });
-                document.getElementById('device-body').innerHTML = html;
-            });
-
-            fetch('/api/stats').then(r => r.json()).then(data => {
-                document.getElementById('stats-json').innerHTML = JSON.stringify(data, null, 2);
+                document.getElementById('devices').innerHTML = data.map(x => `<tr><td>${x.ip}</td><td style="color:#39ff14">UP</td><td>${x.ports}</td></tr>`).join('');
             });
         }
-
-        setInterval(updateUI, 3000);
-        updateUI();
+        setInterval(updateUI, 3000); updateUI();
     </script>
 </body>
 </html>
