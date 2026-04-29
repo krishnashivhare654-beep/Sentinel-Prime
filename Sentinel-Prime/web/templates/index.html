@@ -7,36 +7,51 @@
         body { background: var(--bg); color: var(--neon); font-family: 'Courier New', monospace; padding: 20px; }
         .header { border-bottom: 2px solid var(--neon); padding-bottom: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .box { background: var(--card); border: 1px solid #1a1a1a; padding: 15px; border-radius: 5px; }
-        table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; }
-        th { text-align: left; color: #555; border-bottom: 1px solid #222; padding: 5px; }
+        .box { background: var(--card); border: 1px solid #1a1a1a; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th { text-align: left; color: #555; border-bottom: 1px solid #222; }
         td { padding: 8px 5px; border-bottom: 1px solid #111; }
-        .btn { background: none; border: 1px solid var(--neon); color: var(--neon); cursor: pointer; padding: 10px; font-family: monospace; }
-        .btn:hover { background: var(--neon); color: #000; }
+        .btn { background: none; border: 1px solid var(--neon); color: var(--neon); cursor: pointer; padding: 8px; font-family: monospace; }
+        input { background: #000; border: 1px solid #333; color: var(--neon); padding: 5px; width: 80%; margin-bottom: 10px; }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1 style="letter-spacing: 3px;">SENTINEL PRIME // CMD_HUD</h1>
-        <button class="btn" onclick="fetch('/api/scan').then(r=>r.json()).then(d=>alert(d.status))">>_ INITIATE_SCAN</button>
+        <h1>SENTINEL PRIME // CMD_HUD</h1>
+        <button class="btn" onclick="fetch('/api/scan')">>_ INITIATE_SCAN</button>
     </div>
+
+    <div class="box">
+        <h2>>_ VAULT_X (CRYPTOGRAPHIC_CONTROL)</h2>
+        <input type="text" id="file-path" placeholder="C:/path/to/file.txt">
+        <input type="password" id="file-pass" placeholder="VAULT_PASSWORD">
+        <br>
+        <button class="btn" onclick="vaultAction('encrypt')">ENCRYPT_FILE</button>
+        <button class="btn" onclick="vaultAction('decrypt')" style="border-color:#ff3131; color:#ff3131;">DECRYPT_FILE</button>
+    </div>
+
     <div class="grid">
         <div class="box">
             <h2>>_ LIVE_TRAFFIC</h2>
-            <table>
-                <thead><tr><th>TIME</th><th>SRC</th><th>DST</th><th>PROTO</th></tr></thead>
-                <tbody id="traffic"></tbody>
-            </table>
+            <table><thead><tr><th>TIME</th><th>SRC</th><th>DST</th><th>PROTO</th></tr></thead><tbody id="traffic"></tbody></table>
         </div>
         <div class="box">
             <h2>>_ DISCOVERED_DEVICES</h2>
-            <table>
-                <thead><tr><th>IP_ADDR</th><th>STATUS</th><th>OPEN_PORTS</th></tr></thead>
-                <tbody id="devices"></tbody>
-            </table>
+            <table><thead><tr><th>IP_ADDR</th><th>STATUS</th><th>OPEN_PORTS</th></tr></thead><tbody id="devices"></tbody></table>
         </div>
     </div>
+
     <script>
+        function vaultAction(type) {
+            const path = document.getElementById('file-path').value;
+            const password = document.getElementById('file-pass').value;
+            fetch(`/api/vault/${type}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({path, password})
+            }).then(r => r.json()).then(d => alert(d.message));
+        }
+
         function updateUI() {
             fetch('/api/traffic').then(r => r.json()).then(data => {
                 document.getElementById('traffic').innerHTML = data.map(x => `<tr><td>${x.timestamp.split(' ')[1]}</td><td>${x.src_ip}</td><td>${x.dst_ip}</td><td>${x.protocol}</td></tr>`).join('');
