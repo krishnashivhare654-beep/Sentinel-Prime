@@ -12,9 +12,14 @@ def init_scout_db():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
+    # IP ko UNIQUE rakha hai taaki duplicates na aayein
     c.execute('''CREATE TABLE IF NOT EXISTS devices 
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT, ip TEXT UNIQUE, hostname TEXT, 
-                  status TEXT, ports TEXT, last_seen TEXT)''')
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT, 
+                  ip TEXT UNIQUE, 
+                  hostname TEXT, 
+                  status TEXT, 
+                  ports TEXT, 
+                  last_seen TEXT)''')
     conn.commit()
     conn.close()
 
@@ -35,6 +40,7 @@ def scan_network(network_range):
             ports = ",".join([str(p) for p in nm[host].all_tcp()])
             ts = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
+            # INSERT OR REPLACE duplicates ko handle karega
             c.execute("INSERT OR REPLACE INTO devices (ip, hostname, status, ports, last_seen) VALUES (?,?,?,?,?)",
                       (ip, hostname, status, ports, ts))
             print(f"[+] Discovered: {ip} | Status: {status}")

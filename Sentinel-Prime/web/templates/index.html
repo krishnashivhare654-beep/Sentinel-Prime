@@ -1,73 +1,94 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>SENTINEL PRIME // HUD</title>
     <style>
         :root { --neon: #00f2fe; --bg: #050505; --card: #0a0a0c; }
-        body { background: var(--bg); color: var(--neon); font-family: monospace; padding: 20px; }
-        .header { border-bottom: 2px solid var(--neon); padding-bottom: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; }
+        body { background: var(--bg); color: var(--neon); font-family: 'Courier New', monospace; padding: 20px; }
+        .header { border-bottom: 2px solid var(--neon); padding-bottom: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .box { background: var(--card); border: 1px solid #1a1a1a; padding: 15px; border-radius: 5px; }
+        .box { background: var(--card); border: 1px solid #1a1a1a; padding: 15px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,242,254,0.1); }
         table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; }
-        th { text-align: left; color: #555; border-bottom: 1px solid #222; }
-        td { padding: 6px 0; border-bottom: 1px solid #111; }
-        .btn { background: none; border: 1px solid var(--neon); color: var(--neon); cursor: pointer; padding: 5px 10px; }
+        th { text-align: left; color: #555; border-bottom: 1px solid #222; padding: 5px; }
+        td { padding: 8px 5px; border-bottom: 1px solid #111; }
+        .btn { background: none; border: 1px solid var(--neon); color: var(--neon); cursor: pointer; padding: 8px 15px; font-family: monospace; }
         .btn:hover { background: var(--neon); color: #000; }
         .risk-low { color: #39ff14; }
+        pre { background: #000; padding: 10px; border: 1px solid #222; color: #888; font-size: 13px; }
     </style>
 </head>
 <body>
     <div class="header">
-        <div style="font-size: 1.2rem; font-weight: bold;">SENTINEL PRIME // COMMAND_CENTER</div>
-        <button class="btn" onclick="triggerScan()">START_NETWORK_SCAN</button>
+        <div style="font-size: 1.5rem; font-weight: bold; letter-spacing: 3px;">SENTINEL PRIME // CMD_HUD</div>
+        <button class="btn" onclick="triggerScan()">>_ INITIATE_NETWORK_SCAN</button>
     </div>
 
     <div class="grid">
         <div class="box">
-            <h2>>_ LIVE_TRAFFIC_LOGS</h2>
+            <h2 style="color:#fff; font-size:1rem;">>_ LIVE_PACKET_STREAM</h2>
             <table>
-                <thead><tr><th>TIME</th><th>SRC</th><th>DST</th><th>PROTO</th><th>RISK</th></tr></thead>
+                <thead><tr><th>TIME</th><th>SOURCE</th><th>DESTINATION</th><th>PROTO</th><th>RISK</th></tr></thead>
                 <tbody id="traffic-body"></tbody>
             </table>
         </div>
 
         <div class="box">
-            <h2>>_ DISCOVERED_DEVICES</h2>
+            <h2 style="color:#fff; font-size:1rem;">>_ NETWORK_DISCOVERY</h2>
             <table>
-                <thead><tr><th>IP</th><th>HOSTNAME</th><th>STATUS</th><th>PORTS</th></tr></thead>
+                <thead><tr><th>IP_ADDR</th><th>HOSTNAME</th><th>STATUS</th><th>OPEN_PORTS</th></tr></thead>
                 <tbody id="device-body"></tbody>
             </table>
-            <h2 style="margin-top:20px;">>_ PROTOCOL_STATS</h2>
-            <pre id="stats-json" style="font-size: 14px; color:#888;"></pre>
+            
+            <h2 style="color:#fff; font-size:1rem; margin-top:30px;">>_ PROTOCOL_STATS</h2>
+            <pre id="stats-json"></pre>
         </div>
     </div>
 
     <script>
         function triggerScan() {
-            fetch('/api/scan').then(r => r.json()).then(d => alert(d.status));
+            fetch('/api/scan').then(r => r.json()).then(d => {
+                alert("Scout Engine Triggered: " + d.status);
+            });
         }
 
         function updateUI() {
-            // Update Traffic
+            // Traffic Update
             fetch('/api/traffic').then(r => r.json()).then(data => {
                 let html = "";
-                data.forEach(x => html += `<tr><td>${x.timestamp.split(' ')[1]}</td><td>${x.src_ip}</td><td>${x.dst_ip}</td><td>${x.protocol}</td><td class="risk-low">${x.risk_level}</td></tr>`);
+                data.forEach(x => {
+                    html += `<tr>
+                        <td>${x.timestamp.split(' ')[1]}</td>
+                        <td>${x.src_ip}</td>
+                        <td>${x.dst_ip}</td>
+                        <td>${x.protocol}</td>
+                        <td class="risk-low">${x.risk_level}</td>
+                    </tr>`;
+                });
                 document.getElementById('traffic-body').innerHTML = html;
             });
 
-            // Update Devices
+            // Devices Update
             fetch('/api/devices').then(r => r.json()).then(data => {
                 let html = "";
-                data.forEach(x => html += `<tr><td>${x.ip}</td><td>${x.hostname || 'NA'}</td><td style="color:#39ff14">UP</td><td style="color:#ffae00">${x.ports}</td></tr>`);
+                data.forEach(x => {
+                    html += `<tr>
+                        <td>${x.ip}</td>
+                        <td>${x.hostname || 'N/A'}</td>
+                        <td style="color:#39ff14">${x.status.toUpperCase()}</td>
+                        <td style="color:#ffae00">${x.ports || 'SCANNING...'}</td>
+                    </tr>`;
+                });
                 document.getElementById('device-body').innerHTML = html;
             });
 
-            // Update Stats
+            // Stats Update
             fetch('/api/stats').then(r => r.json()).then(data => {
                 document.getElementById('stats-json').innerHTML = JSON.stringify(data, null, 2);
             });
         }
 
+        // Refresh HUD every 3 seconds
         setInterval(updateUI, 3000);
         updateUI();
     </script>
