@@ -4,64 +4,86 @@
     <title>SENTINEL PRIME // CMD_HUD</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --neon: #00f2fe; --bg: #050505; --card: #0a0a0c; --alert: #ff3131; }
+        :root { --neon: #00f2fe; --bg: #050505; --card: #0a0a0c; --alert: #ff3131; --warning: #ffae00; }
         body { background: var(--bg); color: var(--neon); font-family: 'Courier New', monospace; padding: 20px; margin: 0; }
         .header { border-bottom: 2px solid var(--neon); padding: 10px 0; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .box { background: var(--card); border: 1px solid #1a1a1a; padding: 15px; border-radius: 5px; }
+        .box { background: var(--card); border: 1px solid #1a1a1a; padding: 15px; border-radius: 5px; height: 100%; }
+        
+        /* Alert & Risk Styling */
         #alert-banner { display:none; background: rgba(255, 49, 49, 0.2); border: 1px solid var(--alert); padding: 10px; color: var(--alert); font-weight: bold; margin-bottom: 20px; animation: blink 1s infinite; }
         @keyframes blink { 0% {opacity: 1;} 50% {opacity: 0.5;} 100% {opacity: 1;} }
-        table { width: 100%; border-collapse: collapse; font-size: 11px; }
-        th { text-align: left; color: #555; border-bottom: 1px solid #222; }
+        
+        .risk-tag { padding: 2px 5px; border-radius: 3px; font-size: 10px; font-weight: bold; margin-left: 10px; }
+        .CRITICAL { background: var(--alert); color: white; }
+        .HIGH { background: #ff5e00; color: white; }
+        .MEDIUM { background: var(--warning); color: black; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; }
+        th { text-align: left; color: #555; border-bottom: 1px solid #222; padding: 5px; }
         td { padding: 8px 5px; border-bottom: 1px solid #111; }
-        .btn { background: none; border: 1px solid var(--neon); color: var(--neon); cursor: pointer; padding: 8px; font-family: monospace; }
-        input { background: #000; border: 1px solid #333; color: var(--neon); padding: 8px; width: 70%; margin-bottom: 10px; }
-        canvas { max-height: 180px; }
+        
+        .btn { background: none; border: 1px solid var(--neon); color: var(--neon); cursor: pointer; padding: 8px; font-family: monospace; transition: 0.3s; }
+        .btn:hover { background: var(--neon); color: #000; box-shadow: 0 0 10px var(--neon); }
+        input { background: #000; border: 1px solid #333; color: var(--neon); padding: 8px; width: 80%; margin-bottom: 10px; outline: none; }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>SENTINEL PRIME // V2.0</h1>
-        <button class="btn" onclick="fetch('/api/scan')">>_ INITIATE_SCAN</button>
+        <h1 style="letter-spacing: 5px; margin:0;">SENTINEL PRIME // V2.1</h1>
+        <button class="btn" onclick="fetch('/api/scan')">>_ INITIATE_NETWORK_SCAN</button>
     </div>
 
     <!-- Watchtower Alerts -->
     <div id="alert-banner">⚠️ THREAT_DETECTED: <span id="alert-msg"></span></div>
 
     <div class="grid">
+        <!-- Vault-X Control -->
         <div class="box">
             <h2 style="color:#fff;">>_ VAULT_X (AES-256)</h2>
-            <input type="text" id="file-path" placeholder="FILE_PATH">
-            <input type="password" id="file-pass" placeholder="PASSWORD">
+            <input type="text" id="file-path" placeholder="C:/path/to/file.txt">
+            <input type="password" id="file-pass" placeholder="VAULT_PASSWORD">
             <br>
-            <button class="btn" onclick="vaultAction('encrypt')">ENCRYPT</button>
-            <button class="btn" onclick="vaultAction('decrypt')" style="border-color:var(--alert); color:var(--alert);">DECRYPT</button>
+            <button class="btn" onclick="vaultAction('encrypt')">ENCRYPT_FILE</button>
+            <button class="btn" onclick="vaultAction('decrypt')" style="border-color:var(--alert); color:var(--alert);">DECRYPT_FILE</button>
         </div>
 
+        <!-- Risk Assessment Panel -->
         <div class="box">
-            <h2 style="color:#fff;">>_ TRAFFIC_ANALYTICS</h2>
+            <h2 style="color:#fff;">>_ VULNERABILITY_INTELLIGENCE</h2>
+            <div id="risk-list" style="max-height: 180px; overflow-y: auto;">
+                <p style="color:#555;">Scanning for vulnerabilities...</p>
+            </div>
+        </div>
+
+        <!-- Traffic Analytics -->
+        <div class="box">
+            <h2 style="color:#fff;">>_ PROTOCOL_DISTRIBUTION</h2>
             <canvas id="protocolChart"></canvas>
         </div>
 
+        <!-- Network Devices -->
         <div class="box">
-            <h2>>_ LIVE_STREAM</h2>
+            <h2>>_ DISCOVERED_DEVICES</h2>
             <table>
-                <thead><tr><th>TIME</th><th>SRC</th><th>DST</th><th>PROTO</th></tr></thead>
-                <tbody id="traffic"></tbody>
-            </table>
-        </div>
-
-        <div class="box">
-            <h2>>_ NETWORK_DEVICES</h2>
-            <table>
-                <thead><tr><th>IP_ADDR</th><th>STATUS</th><th>PORTS</th></tr></thead>
+                <thead><tr><th>IP_ADDR</th><th>STATUS</th><th>OPEN_PORTS</th></tr></thead>
                 <tbody id="devices"></tbody>
             </table>
         </div>
     </div>
 
+    <!-- Traffic Feed -->
+    <div class="box" style="margin-top:20px;">
+        <h2>>_ LIVE_PACKET_STREAM</h2>
+        <table>
+            <thead><tr><th>TIME</th><th>SOURCE</th><th>DESTINATION</th><th>PROTOCOL</th></tr></thead>
+            <tbody id="traffic"></tbody>
+        </table>
+    </div>
+
     <script>
         let protocolChart;
+
         function vaultAction(type) {
             const path = document.getElementById('file-path').value;
             const password = document.getElementById('file-pass').value;
@@ -73,19 +95,29 @@
         }
 
         function updateUI() {
+            // Traffic Stream
             fetch('/api/traffic').then(r => r.json()).then(data => {
-                document.getElementById('traffic').innerHTML = data.map(x => `<tr><td>${x.timestamp.split(' ')[1]}</td><td>${x.src_ip}</td><td>${x.dst_ip}</td><td>${x.protocol}</td></tr>`).join('');
+                document.getElementById('traffic').innerHTML = data.map(x => `
+                    <tr><td>${x.timestamp.split(' ')[1]}</td><td>${x.src_ip}</td><td>${x.dst_ip}</td><td>${x.protocol}</td></tr>
+                `).join('');
             });
+
+            // Device List
             fetch('/api/devices').then(r => r.json()).then(data => {
-                document.getElementById('devices').innerHTML = data.map(x => `<tr><td>${x.ip}</td><td style="color:#39ff14">UP</td><td>${x.ports}</td></tr>`).join('');
+                document.getElementById('devices').innerHTML = data.map(x => `
+                    <tr><td>${x.ip}</td><td style="color:#39ff14">UP</td><td style="color:var(--warning)">${x.ports}</td></tr>
+                `).join('');
             });
+
+            // Stats for Chart
             fetch('/api/stats').then(r => r.json()).then(data => {
                 if(protocolChart) {
                     protocolChart.data.datasets[0].data = [data.TCP||0, data.UDP||0, data.ICMP||0];
                     protocolChart.update();
                 }
             });
-            // Watchtower Alert Check
+
+            // Watchtower Alerts
             fetch('/api/alerts').then(r => r.json()).then(data => {
                 const banner = document.getElementById('alert-banner');
                 if(data.length > 0) {
@@ -95,13 +127,38 @@
                     banner.style.display = 'none';
                 }
             });
+
+            // Risk Assessment Logic
+            fetch('/api/risk_assessment').then(r => r.json()).then(data => {
+                let html = "";
+                data.forEach(dev => {
+                    if(dev.threats.length > 0) {
+                        dev.threats.forEach(t => {
+                            html += `<div style="margin-bottom:10px; border-left: 2px solid var(--alert); padding-left:10px;">
+                                        <span style="color:#fff;">${dev.ip}</span> 
+                                        <span class="risk-tag ${t.level}">${t.level}</span><br>
+                                        <small style="color:#777;">${t.info}</small>
+                                     </div>`;
+                        });
+                    }
+                });
+                document.getElementById('risk-list').innerHTML = html || '<p style="color:#39ff14">No critical vulnerabilities detected.</p>';
+            });
         }
 
+        // Initialize Chart
         const ctx = document.getElementById('protocolChart').getContext('2d');
         protocolChart = new Chart(ctx, {
             type: 'doughnut',
-            data: { labels: ['TCP', 'UDP', 'ICMP'], datasets: [{ data: [0,0,0], backgroundColor: ['#00f2fe', '#7117ea', '#ff3131'] }] },
-            options: { plugins: { legend: { labels: { color: '#00f2fe' } } } }
+            data: {
+                labels: ['TCP', 'UDP', 'ICMP'],
+                datasets: [{
+                    data: [0, 0, 0],
+                    backgroundColor: ['#00f2fe', '#7117ea', '#ff3131'],
+                    borderColor: '#050505'
+                }]
+            },
+            options: { plugins: { legend: { labels: { color: '#00f2fe', font: { family: 'monospace' } } } } }
         });
 
         setInterval(updateUI, 3000);
