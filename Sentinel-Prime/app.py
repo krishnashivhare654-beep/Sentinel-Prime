@@ -1,9 +1,10 @@
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, send_file
 from flask_socketio import SocketIO
 import sqlite3
 import os
 import threading
 import time
+from fpdf import FPDF
 
 # Core Module Imports
 from core.scout import scan_network
@@ -13,18 +14,16 @@ from core.watchtower import analyze_threats
 app = Flask(__name__, template_folder='web/templates', static_folder='web/static')
 socketio = SocketIO(app)
 
-# Database path
 DB_PATH = os.path.join(os.path.dirname(__file__), 'logs/sentinel.db')
-BLACKLIST_PATH = os.path.join(os.path.dirname(__file__), 'logs/blacklist.txt')
+REPORT_PATH = os.path.join(os.path.dirname(__file__), 'logs/security_report.pdf')
 
-# Risk Intelligence Map
 RISK_MAP = {
     "445": {"level": "CRITICAL", "info": "SMB Vulnerability (EternalBlue Risk)"},
     "135": {"level": "MEDIUM", "info": "RPC Endpoint Mapper"},
     "3000": {"level": "LOW", "info": "Development Server Node.js"},
     "53": {"level": "LOW", "info": "Standard DNS Service"},
     "80": {"level": "MEDIUM", "info": "Unsecured HTTP Protocol"},
-    "3389": {"level": "HIGH", "info": "Remote Desktop Protocol (RDP) Exposed"}
+    "3389": {"level": "HIGH", "info": "RDP Exposed"}
 }
 
 def get_db_connection():
@@ -32,29 +31,35 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
-# --- BACKGROUND AUTOMATION ---
-
-def janitor_and_logger():
-    """Database saaf karta hai aur threats ko blacklist mein save karta hai"""
-    while True:
-        try:
-            alerts = analyze_threats()
-            if alerts:
-                with open(BLACKLIST_PATH, "a") as f:
-                    for a in alerts:
-                        f.write(f"{time.ctime()} - THREAT: {a['msg']}\n")
-            
-            conn = sqlite3.connect(DB_PATH)
-            conn.execute("DELETE FROM traffic WHERE timestamp < datetime('now', '-1 day')")
-            conn.commit()
-            conn.close()
-        except Exception as e:
-            print(f"[-] Automation Error: {e}")
-        time.sleep(3600)
-
-def auto_discovery():
-    print("[*] Sentinel Prime: Autonomous Discovery Engaged...")
-    scan_network("10.106.204.0/24")
+# --- PDF GENERATOR LOGIC ---
+def create_pdf_report():
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", 'B', 16)
+    pdf.cell(200, 10, txt="SENTINEL PRIME // SECURITY EXECUTIVE REPORT", ln=True, align='C')
+    pdf.ln(10)
+    
+    pdf.set_font("Arial", size=12)
+    conn = get_db_connection()
+    
+    # Section 1: Network Summary
+    devices = conn.execute('SELECT COUNT(*) as count FROM devices').fetchone()
+    pdf.cell(200, 10, txt=f"Total Devices Discovered: {devices['count']}", ln=True)
+    
+    # Section 2: Recent Threats
+    pdf.ln(5)
+    pdf.set_font("Arial", 'B', 12)
+    pdf.cell(200, 10, txt="Detected Threats (Last 24h):", ln=True)
+    pdf.set_font("Arial", size=10)
+    alerts = analyze_threats()
+    if not alerts:
+        pdf.cell(200, 10, txt="No immediate threats detected.", ln=True)
+    for alert in alerts:
+        pdf.cell(200, 10, txt=f"- {alert['msg']}", ln=True)
+        
+    conn.close()
+    pdf.output(REPORT_PATH)
+    return REPORT_PATH
 
 # --- ROUTES ---
 
@@ -85,9 +90,10 @@ def get_devices():
     conn.close()
     return jsonify([dict(row) for row in devices])
 
-@app.route('/api/alerts')
-def get_alerts():
-    return jsonify(analyze_threats())
+@app.route('/api/download_report')
+def download_report():
+    path = create_pdf_report()
+    return send_file(path, as_attachment=True)
 
 @app.route('/api/risk_assessment')
 def risk_assessment():
@@ -121,7 +127,7 @@ def vault_decrypt():
     return jsonify({"success": success, "message": msg})
 
 if __name__ == '__main__':
-    threading.Thread(target=janitor_and_logger, daemon=True).start()
-    threading.Thread(target=auto_discovery, daemon=True).start()
+    # Start background threads
+    threading.Thread(target=scan_network, args=("10.106.204.0/24",), daemon=True).start()
     print("[*] Sentinel Prime Core: Online & Monitoring")
     socketio.run(app, debug=True, port=5000)
