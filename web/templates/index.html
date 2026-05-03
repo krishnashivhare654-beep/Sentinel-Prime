@@ -2,19 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sentinel Prime // V2.3 Dashboard</title>
+    <title>Sentinel Prime // Dashboard</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <style>
-        body { background-color: #050505; color: #00f2ff; font-family: 'Courier New', Courier, monospace; }
+        body { background-color: #050505; color: #00f2ff; font-family: 'Courier New', monospace; }
         .card { background-color: #0a0a0a; border: 1px solid #00f2ff; border-radius: 0; margin-bottom: 20px; }
-        .card-header { border-bottom: 1px solid #00f2ff; font-weight: bold; font-size: 1.2rem; }
-        .btn-cyber { background: transparent; border: 1px solid #ff0055; color: #ff0055; border-radius: 0; }
-        .btn-cyber:hover { background: #ff0055; color: white; }
+        .card-header { border-bottom: 1px solid #00f2ff; font-weight: bold; }
         footer { border-top: 1px solid #333; margin-top: 50px; padding: 30px; background: #0a0a0a; }
         footer a { color: #00f2ff; text-decoration: none; margin: 0 10px; }
-        footer a:hover { text-decoration: underline; }
-        .status-badge { padding: 2px 8px; font-size: 0.8rem; }
     </style>
 </head>
 <body>
@@ -22,80 +17,40 @@
 <nav class="navbar navbar-dark bg-black border-bottom border-info p-3">
     <div class="container-fluid">
         <span class="navbar-brand mb-0 h1 text-info">SENTINEL PRIME // V2.3</span>
-        <div>
-            <span class="badge bg-danger">ADMIN SESSION</span>
-            <a href="/logout" class="btn btn-outline-danger btn-sm ms-2">LOGOUT</a>
-        </div>
+        <span class="badge bg-success">SYSTEM ONLINE</span>
     </div>
 </nav>
 
 <div class="container mt-4">
     <div class="row">
-        <!-- VAULT_X SECTION -->
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">>_ VAULT_X (AES-256)</div>
                 <div class="card-body">
-                    <input type="text" class="form-control bg-dark text-info border-secondary mb-2" placeholder="FULL_FILE_PATH">
-                    <input type="password" class="form-control bg-dark text-info border-secondary mb-3" placeholder="SECRET_ENCRYPTION_KEY">
-                    <button class="btn btn-info btn-sm">ENCRYPT</button>
-                    <button class="btn btn-cyber btn-sm">DECRYPT</button>
+                    <input type="text" class="form-control bg-dark text-info border-secondary mb-2" placeholder="FILE_PATH">
+                    <button class="btn btn-outline-info btn-sm">ENCRYPT</button>
                 </div>
             </div>
         </div>
-
-        <!-- DARK WEB MONITOR (New Feature) -->
         <div class="col-md-6">
             <div class="card">
-                <div class="card-header">>_ DARKWEB_INTELLIGENCE</div>
+                <div class="card-header">>_ DARKWEB_MONITOR</div>
                 <div class="card-body" id="darkweb-logs">
-                    <p class="text-warning">Analyzing network nodes...</p>
-                    <div id="leak-status">Status: <span class="text-success">System Secure</span></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <!-- TRAFFIC ANALYTICS -->
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header">>_ LIVE_PACKET_STREAM</div>
-                <div class="card-body">
-                    <table class="table table-dark table-hover table-sm small">
-                        <thead>
-                            <tr><th>TIME</th><th>SOURCE_IP</th><th>DESTINATION_IP</th><th>PROTO</th></tr>
-                        </thead>
-                        <tbody id="packet-stream">
-                            <tr><td>17:05:01</td><td>10.0.0.5</td><td>8.8.8.8</td><td>TCP</td></tr>
-                        </tbody>
-                    </table>
+                    <p class="text-warning">Scanning for data leaks...</p>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- PROFESSIONAL FOOTER (Feature #4) -->
 <footer class="text-center">
     <p>Developed by <strong>Krishna Shivhare</strong> | B.Tech CSE (Cyber Security)</p>
     <div class="links">
         <a href="https://github.com/krishnashivhare654-beep" target="_blank">GitHub</a> |
-        <a href="#" target="_blank">LinkedIn</a> |
-        <a href="https://www.coursera.org/account/accomplishments" target="_blank">Certifications (Google IT/Cybersecurity)</a>
+        <a href="https://www.coursera.org/account/accomplishments" target="_blank">Certifications</a>
     </div>
-    <p class="small text-muted mt-2">Projects: ShadowTrace & Sentinel Prime V2.3</p>
+    <p class="small text-muted mt-2">Projects: ShadowTrace & Sentinel Prime</p>
 </footer>
-
-<script>
-    // Live update simulation
-    setInterval(() => {
-        fetch('/api/traffic').then(res => res.json()).then(data => {
-            const tbody = document.getElementById('packet-stream');
-            tbody.innerHTML = data.map(p => `<tr><td>${p.time}</td><td>${p.src_ip}</td><td>${p.dst_ip}</td><td>${p.protocol}</td></tr>`).join('');
-        });
-    }, 5000);
-</script>
 
 </body>
 </html>
