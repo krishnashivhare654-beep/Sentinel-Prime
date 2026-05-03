@@ -2,145 +2,102 @@
 <html lang="en" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sentinel Prime // Security Hub</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <style>
-        :root { --neon-green: #00ff41; --bg-dark: #050505; --bg-light: #f8f9fa; }
-        
-        body { transition: 0.3s; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        
-        /* Dark Mode Styles */
+        :root { --neon-green: #00ff41; --bg-dark: #050505; }
+        body { transition: 0.3s; font-family: 'Segoe UI', sans-serif; }
         [data-bs-theme="dark"] body { background-color: var(--bg-dark); color: var(--neon-green); }
-        [data-bs-theme="dark"] .card { background-color: #0a0a0a; border: 1px solid var(--neon-green); }
-        [data-bs-theme="dark"] .navbar { border-bottom: 1px solid var(--neon-green); }
-        
-        /* Light Mode Styles */
-        [data-bs-theme="light"] body { background-color: var(--bg-light); color: #1a1a1a; }
-        [data-bs-theme="light"] .card { background-color: white; border: 1px solid #ddd; color: #1a1a1a; }
-        [data-bs-theme="light"] .navbar { background-color: white !important; border-bottom: 1px solid #ddd; }
-
-        /* Hover Zoom Effect (Making options bigger) */
-        .card, .nav-link, .btn { transition: transform 0.3s ease, box-shadow 0.3s ease; }
-        .card:hover { transform: scale(1.03); box-shadow: 0 10px 20px rgba(0, 255, 65, 0.2); }
-        .btn:hover { transform: translateY(-2px); }
-
-        .navbar-brand { font-weight: bold; letter-spacing: 2px; color: var(--neon-green) !important; }
-        footer { padding: 50px 0; border-top: 1px solid #333; margin-top: 50px; font-size: 0.9rem; }
-        .footer-links a { color: inherit; text-decoration: none; margin-bottom: 8px; display: block; opacity: 0.8; }
-        .footer-links a:hover { color: var(--neon-green); opacity: 1; }
-        
-        .mode-toggle { border: 1px solid var(--neon-green); border-radius: 20px; padding: 5px 15px; cursor: pointer; }
+        .card { background-color: #0a0a0a; border: 1px solid var(--neon-green); transition: 0.3s; }
+        .card:hover { transform: scale(1.02); box-shadow: 0 0 15px rgba(0, 255, 65, 0.2); }
+        .modal-content { background-color: #0a0a0a; border: 1px solid var(--neon-green); color: var(--neon-green); }
+        .btn-success { background-color: var(--neon-green); color: black; border: none; font-weight: bold; }
+        footer { padding: 50px 0; border-top: 1px solid #333; margin-top: 50px; }
+        .footer-links a { color: inherit; text-decoration: none; display: block; opacity: 0.7; margin-bottom: 5px; }
+        .footer-links a:hover { opacity: 1; color: white; }
     </style>
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg p-3">
+<nav class="navbar navbar-expand-lg p-3 border-bottom border-success">
     <div class="container">
-        <a class="navbar-brand" href="#">SENTINEL PRIME v2.3</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
+        <a class="navbar-brand text-success fw-bold" href="#">SENTINEL PRIME v2.3</a>
+        <div class="collapse navbar-collapse">
             <ul class="navbar-nav me-auto">
-                <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
-                <li class="nav-item"><a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#helpModal">Documentation</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">Contact</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#docModal">Documentation</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#contactModal">Contact</a></li>
             </ul>
-            <div class="d-flex align-items-center">
-                <div class="mode-toggle me-3" onclick="toggleTheme()" id="theme-btn">🌙 Switch to Light Mode</div>
-                <button class="btn btn-outline-success btn-sm me-2">>_ DOWNLOAD_REPORT</button>
-                <button class="btn btn-success btn-sm">>_ INITIATE_SCAN</button>
-            </div>
+            <button class="btn btn-outline-success btn-sm me-2" onclick="toggleTheme()">🌓 Switch Theme</button>
+            <button class="btn btn-success btn-sm">INITIATE SCAN</button>
         </div>
     </div>
 </nav>
 
+<!-- MAIN CONTENT -->
 <div class="container mt-5">
     <div class="row g-4">
-        <!-- VAULT_X SECTION -->
         <div class="col-md-6">
             <div class="card h-100 p-4">
-                <h5 class="mb-4">>_ VAULT_X (AES-256)</h5>
-                <input type="text" class="form-control bg-transparent border-secondary text-success mb-2" placeholder="FULL_FILE_PATH">
-                <input type="password" class="form-control bg-transparent border-secondary text-success mb-3" placeholder="SECRET_ENCRYPTION_KEY">
-                <div class="d-flex">
-                    <button class="btn btn-success me-2">ENCRYPT</button>
-                    <button class="btn btn-outline-danger">DECRYPT</button>
-                </div>
+                <h5>>_ VAULT_X (AES-256)</h5>
+                <input type="text" class="form-control bg-transparent border-secondary text-success mb-2" placeholder="FILE_PATH">
+                <input type="password" class="form-control bg-transparent border-secondary text-success mb-3" placeholder="KEY">
+                <button class="btn btn-success w-100">ENCRYPT DATA</button>
             </div>
         </div>
-
-        <!-- ANALYTICS SECTION -->
         <div class="col-md-6">
-            <div class="card h-100 p-4">
-                <h5 class="mb-4">>_ TRAFFIC_ANALYTICS</h5>
-                <div class="d-flex justify-content-center">
-                    <canvas id="trafficChart" style="max-height: 180px;"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- DEVICES SECTION -->
-        <div class="col-md-12">
-            <div class="card p-4" id="features">
-                <h5 class="mb-4">>_ DISCOVERED_DEVICES & VULNERABILITY_INTEL</h5>
-                <div class="table-responsive">
-                    <table class="table table-dark table-hover border-secondary">
-                        <thead><tr><th>IP_ADDR</th><th>STATUS</th><th>OPEN_PORTS</th><th>RISK_LEVEL</th></tr></thead>
-                        <tbody>
-                            <tr><td>10.106.204.1</td><td class="text-success">ONLINE</td><td>80, 443</td><td><span class="badge bg-success">LOW</span></td></tr>
-                            <tr><td>10.106.204.45</td><td class="text-success">ONLINE</td><td>8080</td><td><span class="badge bg-warning text-dark">MEDIUM</span></td></tr>
-                        </tbody>
-                    </table>
-                </div>
+            <div class="card h-100 p-4 text-center">
+                <h5>>_ TRAFFIC_ANALYTICS</h5>
+                <canvas id="trafficChart" style="max-height: 150px;"></canvas>
             </div>
         </div>
     </div>
 </div>
 
-<!-- COMPREHENSIVE FOOTER -->
-<footer class="bg-black">
-    <div class="container">
-        <div class="row">
-            <div class="col-md-3">
-                <h6 class="text-white mb-4">Features</h6>
-                <div class="footer-links">
-                    <a href="#">Encryption Engine</a>
-                    <a href="#">Packet Sniffer</a>
-                    <a href="#">Threat Detection</a>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <h6 class="text-white mb-4">Get Started</h6>
-                <div class="footer-links">
-                    <a href="#">Pricing</a>
-                    <a href="#">API Access</a>
-                    <a href="#">Tutorials</a>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <h6 class="text-white mb-4">Help & Support</h6>
-                <div class="footer-links">
-                    <a href="#" data-bs-toggle="modal" data-bs-target="#helpModal">Documentation</a>
-                    <a href="#">Community Forum</a>
-                    <a href="#">Contact Support</a>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <h6 class="text-white mb-4">Quick Links</h6>
-                <div class="footer-links">
-                    <a href="https://github.com/krishnashivhare654-beep" target="_blank">⭐ GitHub Profile</a>
-                    <a href="#">Platform Status</a>
-                </div>
+<!-- CONTACT MODAL -->
+<div class="modal fade" id="contactModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header border-success"><h5>CONTACT DEVELOPER</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body text-center">
+                <p>Feel free to reach out for collaborations or queries.</p>
+                <h4 class="text-white">📞 +91 9351069427</h4>
+                <a href="https://instagram.com/s_krish09" target="_blank" class="btn btn-outline-success mt-3">Follow on Instagram @s_krish09</a>
             </div>
         </div>
-        <hr class="mt-5 border-secondary">
-        <div class="text-center mt-4">
-            <p class="mb-1">© 2026 Sentinel Prime Security Hub. All rights reserved. | v2.3</p>
-            <p class="small text-muted">Developed by Krishna Shivhare | B.Tech CSE (Cyber Security)</p>
+    </div>
+</div>
+
+<!-- DOCUMENTATION MODAL -->
+<div class="modal fade" id="docModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-success"><h5>SYSTEM DOCUMENTATION</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <h6>1. Overview</h6>
+                <p class="small text-secondary">Sentinel Prime is a centralized security orchestration hub for network monitoring and data protection.</p>
+                <h6>2. Vault-X Architecture</h6>
+                <p class="small text-secondary">Uses AES-256 GCM mode for authenticated encryption, ensuring data integrity and confidentiality.</p>
+                <h6>3. Network Scanning</h6>
+                <p class="small text-secondary">Implements asynchronous ARP requests to map active devices on a /24 subnet without high overhead.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer class="bg-black text-center mt-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 footer-links text-start">
+                <h6>Quick Links</h6>
+                <a href="https://github.com/krishnashivhare654-beep" target="_blank">GitHub Profile</a>
+                <a href="#" data-bs-toggle="modal" data-bs-target="#contactModal">Contact Me</a>
+            </div>
+            <div class="col-md-8 text-end">
+                <p>© 2026 Sentinel Prime | Krishna Shivhare | VIT Bhopal University</p>
+                <p class="small text-muted">CSE (Cyber Security & Digital Forensics)</p>
+            </div>
         </div>
     </div>
 </footer>
@@ -148,28 +105,14 @@
 <script>
     function toggleTheme() {
         const html = document.documentElement;
-        const btn = document.getElementById('theme-btn');
-        if (html.getAttribute('data-bs-theme') === 'dark') {
-            html.setAttribute('data-bs-theme', 'light');
-            btn.innerHTML = '🌞 Switch to Dark Mode';
-        } else {
-            html.setAttribute('data-bs-theme', 'dark');
-            btn.innerHTML = '🌙 Switch to Light Mode';
-        }
+        const current = html.getAttribute('data-bs-theme');
+        html.setAttribute('data-bs-theme', current === 'dark' ? 'light' : 'dark');
     }
-
     const ctx = document.getElementById('trafficChart').getContext('2d');
     new Chart(ctx, {
         type: 'doughnut',
-        data: {
-            labels: ['TCP', 'UDP', 'ICMP'],
-            datasets: [{
-                data: [65, 20, 15],
-                backgroundColor: ['#00ff41', '#008f11', '#ff0055'],
-                borderWidth: 0
-            }]
-        },
-        options: { plugins: { legend: { labels: { color: '#00ff41' } } } }
+        data: { labels: ['TCP', 'UDP', 'ICMP'], datasets: [{ data: [70, 20, 10], backgroundColor: ['#00ff41', '#008f11', '#ff0055'], borderWidth: 0 }] },
+        options: { plugins: { legend: { display: false } } }
     });
 </script>
 </body>
