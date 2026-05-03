@@ -9,69 +9,79 @@
         body { background-color: #050505; color: #00f2ff; font-family: 'Courier New', monospace; }
         .card { background-color: #0a0a0a; border: 1px solid #00f2ff; border-radius: 0; margin-bottom: 20px; }
         .card-header { border-bottom: 1px solid #00f2ff; font-weight: bold; }
-        footer { border-top: 1px solid #333; margin-top: 50px; padding: 30px; background: #0a0a0a; }
-        footer a { color: #00f2ff; text-decoration: none; margin: 0 10px; }
-        .table { color: #00f2ff; font-size: 0.8rem; }
+        .btn-outline-info, .btn-outline-danger { border-radius: 0; font-size: 0.8rem; }
+        .badge-system { position: absolute; top: 10px; right: 10px; }
+        footer { border-top: 1px solid #333; margin-top: 50px; padding: 30px; background: #0a0a0a; color: #00f2ff; }
+        footer a { color: #00f2ff; text-decoration: none; margin: 0 10px; font-weight: bold; }
+        .table { color: #00f2ff; font-size: 0.8rem; border-color: #333; }
     </style>
 </head>
 <body>
 
-<nav class="navbar navbar-dark bg-black border-bottom border-info p-3">
+<nav class="navbar navbar-dark bg-black border-bottom border-info p-3 mb-4">
     <div class="container-fluid">
         <span class="navbar-brand mb-0 h1 text-info">SENTINEL PRIME // V2.3</span>
-        <span class="badge bg-success">SYSTEM ONLINE</span>
+        <div class="d-flex">
+            <button class="btn btn-outline-success btn-sm me-2">>_ DOWNLOAD_REPORT.PDF</button>
+            <button class="btn btn-outline-info btn-sm">>_ INITIATE_SCAN</button>
+        </div>
     </div>
 </nav>
 
-<div class="container mt-4">
+<div class="container">
     <div class="row">
-        <!-- VAULT_X & DARKWEB -->
+        <!-- LEFT COLUMN: VAULT_X & ANALYTICS -->
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">>_ VAULT_X (AES-256)</div>
                 <div class="card-body">
-                    <input type="text" class="form-control bg-dark text-info border-secondary mb-2" placeholder="FILE_PATH">
-                    <button class="btn btn-outline-info btn-sm">ENCRYPT</button>
+                    <input type="text" class="form-control bg-dark text-info border-secondary mb-2" placeholder="FULL_FILE_PATH (e.g. C:/data/secret.txt)">
+                    <input type="password" class="form-control bg-dark text-info border-secondary mb-3" placeholder="SECRET_ENCRYPTION_KEY">
+                    <button class="btn btn-info btn-sm me-2">ENCRYPT</button>
                     <button class="btn btn-outline-danger btn-sm">DECRYPT</button>
                 </div>
             </div>
             <div class="card">
                 <div class="card-header">>_ TRAFFIC_ANALYTICS</div>
-                <div class="card-body">
-                    <canvas id="trafficChart" style="max-height: 200px;"></canvas>
+                <div class="card-body d-flex justify-content-center">
+                    <canvas id="trafficChart" style="max-height: 200px; max-width: 200px;"></canvas>
                 </div>
             </div>
         </div>
 
-        <!-- DISCOVERED DEVICES -->
+        <!-- RIGHT COLUMN: VULNERABILITY & DEVICES -->
         <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">>_ VULNERABILITY_INTELLIGENCE</div>
+                <div class="card-body">
+                    <p class="text-secondary small">Analyzing network nodes...</p>
+                </div>
+            </div>
             <div class="card">
                 <div class="card-header">>_ DISCOVERED_DEVICES</div>
                 <div class="card-body">
                     <table class="table table-dark table-borderless">
-                        <thead><tr><th>IP_ADDR</th><th>STATUS</th><th>PORTS</th></tr></thead>
-                        <tbody id="device-list"></tbody>
+                        <thead><tr class="text-secondary"><th>IP_ADDR</th><th>STATUS</th><th>OPEN_PORTS</th></tr></thead>
+                        <tbody id="device-list">
+                            <tr><td>10.106.204.1</td><td class="text-success">ONLINE</td><td>80, 443</td></tr>
+                        </tbody>
                     </table>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-header">>_ DARKWEB_MONITOR</div>
-                <div class="card-body" id="darkweb-logs">
-                    <p class="text-warning">Scanning network nodes...</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- LIVE PACKET STREAM -->
+    <!-- BOTTOM ROW: LIVE PACKET STREAM -->
     <div class="row">
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header">>_ LIVE_PACKET_STREAM</div>
                 <div class="card-body">
                     <table class="table table-dark table-hover table-sm">
-                        <thead><tr><th>TIME</th><th>SOURCE_IP</th><th>DESTINATION_IP</th><th>PROTO</th></tr></thead>
-                        <tbody id="packet-stream"></tbody>
+                        <thead><tr class="text-secondary"><th>TIME</th><th>SOURCE_IP</th><th>DESTINATION_IP</th><th>PROTO</th></tr></thead>
+                        <tbody id="packet-stream">
+                            <tr><td>12:08:38</td><td>10.0.0.5</td><td>8.8.8.8</td><td>TCP</td></tr>
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -85,32 +95,23 @@
         <a href="https://github.com/krishnashivhare654-beep" target="_blank">GitHub</a> |
         <a href="https://www.coursera.org/account/accomplishments" target="_blank">Certifications</a>
     </div>
+    <p class="small text-muted mt-2">Projects: ShadowTrace & Sentinel Prime</p>
 </footer>
 
 <script>
-    // Logic to fetch and update data
-    function updateData() {
-        fetch('/api/traffic').then(res => res.json()).then(data => {
-            const tbody = document.getElementById('packet-stream');
-            tbody.innerHTML = data.map(p => `<tr><td>${p.time}</td><td>${p.src_ip}</td><td>${p.dst_ip}</td><td>${p.protocol}</td></tr>`).join('');
-        });
-        
-        fetch('/api/devices').then(res => res.json()).then(data => {
-            const dbody = document.getElementById('device-list');
-            dbody.innerHTML = data.map(d => `<tr><td>${d.ip}</td><td class="text-success">${d.status}</td><td>${d.ports}</td></tr>`).join('');
-        });
-    }
-
-    // Chart.js Setup
     const ctx = document.getElementById('trafficChart').getContext('2d');
     new Chart(ctx, {
         type: 'doughnut',
-        data: { labels: ['TCP', 'UDP', 'ICMP'], datasets: [{ data: [65, 25, 10], backgroundColor: ['#00f2ff', '#7000ff', '#ff0055'] }] },
-        options: { plugins: { legend: { labels: { color: '#00f2ff' } } } }
+        data: {
+            labels: ['TCP', 'UDP', 'ICMP'],
+            datasets: [{
+                data: [65, 20, 15],
+                backgroundColor: ['#00f2ff', '#7000ff', '#ff0055'],
+                borderWidth: 0
+            }]
+        },
+        options: { plugins: { legend: { display: false } } }
     });
-
-    setInterval(updateData, 5000);
-    updateData();
 </script>
 </body>
 </html>
