@@ -2,16 +2,18 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Sentinel Prime // V2.3 Full Suite</title>
+    <title>Sentinel Prime // V2.3 Portfolio Suite</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <style>
         body { background-color: #050505; color: #00f2ff; font-family: 'Courier New', monospace; }
         .card { background-color: #0a0a0a; border: 1px solid #00f2ff; border-radius: 0; margin-bottom: 20px; }
         .card-header { border-bottom: 1px solid #00f2ff; font-weight: bold; }
-        .btn-outline-info, .btn-outline-danger { border-radius: 0; font-size: 0.8rem; }
-        .badge-system { position: absolute; top: 10px; right: 10px; }
-        footer { border-top: 1px solid #333; margin-top: 50px; padding: 30px; background: #0a0a0a; color: #00f2ff; }
+        .btn-outline-info, .btn-outline-danger, .btn-link { border-radius: 0; font-size: 0.8rem; color: #00f2ff; }
+        .modal-content { background-color: #0a0a0a; border: 1px solid #00f2ff; color: #00f2ff; border-radius: 0; }
+        .modal-header { border-bottom: 1px solid #00f2ff; }
+        footer { border-top: 1px solid #333; margin-top: 50px; padding: 30px; background: #0a0a0a; }
         footer a { color: #00f2ff; text-decoration: none; margin: 0 10px; font-weight: bold; }
         .table { color: #00f2ff; font-size: 0.8rem; border-color: #333; }
     </style>
@@ -21,7 +23,9 @@
 <nav class="navbar navbar-dark bg-black border-bottom border-info p-3 mb-4">
     <div class="container-fluid">
         <span class="navbar-brand mb-0 h1 text-info">SENTINEL PRIME // V2.3</span>
-        <div class="d-flex">
+        <div class="d-flex align-items-center">
+            <button class="btn btn-link text-info me-2" data-bs-toggle="modal" data-bs-target="#aboutModal">ABOUT</button>
+            <button class="btn btn-link text-info me-3" data-bs-toggle="modal" data-bs-target="#helpModal">HELP</button>
             <button class="btn btn-outline-success btn-sm me-2">>_ DOWNLOAD_REPORT.PDF</button>
             <button class="btn btn-outline-info btn-sm">>_ INITIATE_SCAN</button>
         </div>
@@ -30,60 +34,80 @@
 
 <div class="container">
     <div class="row">
-        <!-- LEFT COLUMN: VAULT_X & ANALYTICS -->
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">>_ VAULT_X (AES-256)</div>
                 <div class="card-body">
-                    <input type="text" class="form-control bg-dark text-info border-secondary mb-2" placeholder="FULL_FILE_PATH (e.g. C:/data/secret.txt)">
+                    <input type="text" class="form-control bg-dark text-info border-secondary mb-2" placeholder="FULL_FILE_PATH">
                     <input type="password" class="form-control bg-dark text-info border-secondary mb-3" placeholder="SECRET_ENCRYPTION_KEY">
                     <button class="btn btn-info btn-sm me-2">ENCRYPT</button>
                     <button class="btn btn-outline-danger btn-sm">DECRYPT</button>
                 </div>
             </div>
-            <div class="card">
+            <div class="card text-center">
                 <div class="card-header">>_ TRAFFIC_ANALYTICS</div>
                 <div class="card-body d-flex justify-content-center">
-                    <canvas id="trafficChart" style="max-height: 200px; max-width: 200px;"></canvas>
+                    <canvas id="trafficChart" style="max-height: 180px; max-width: 180px;"></canvas>
                 </div>
             </div>
         </div>
 
-        <!-- RIGHT COLUMN: VULNERABILITY & DEVICES -->
         <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">>_ VULNERABILITY_INTELLIGENCE</div>
-                <div class="card-body">
-                    <p class="text-secondary small">Analyzing network nodes...</p>
-                </div>
-            </div>
             <div class="card">
                 <div class="card-header">>_ DISCOVERED_DEVICES</div>
                 <div class="card-body">
                     <table class="table table-dark table-borderless">
                         <thead><tr class="text-secondary"><th>IP_ADDR</th><th>STATUS</th><th>OPEN_PORTS</th></tr></thead>
-                        <tbody id="device-list">
+                        <tbody>
                             <tr><td>10.106.204.1</td><td class="text-success">ONLINE</td><td>80, 443</td></tr>
+                            <tr><td>10.106.204.45</td><td class="text-success">ONLINE</td><td>8080</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">>_ LIVE_PACKET_STREAM</div>
+                <div class="card-body">
+                    <table class="table table-dark table-hover table-sm">
+                        <thead><tr class="text-secondary"><th>TIME</th><th>SOURCE_IP</th><th>DEST_IP</th><th>PROTO</th></tr></thead>
+                        <tbody id="packet-stream">
+                            <tr><td>17:21:44</td><td>10.0.0.5</td><td>8.8.8.8</td><td>TCP</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- BOTTOM ROW: LIVE PACKET STREAM -->
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header">>_ LIVE_PACKET_STREAM</div>
-                <div class="card-body">
-                    <table class="table table-dark table-hover table-sm">
-                        <thead><tr class="text-secondary"><th>TIME</th><th>SOURCE_IP</th><th>DESTINATION_IP</th><th>PROTO</th></tr></thead>
-                        <tbody id="packet-stream">
-                            <tr><td>12:08:38</td><td>10.0.0.5</td><td>8.8.8.8</td><td>TCP</td></tr>
-                        </tbody>
-                    </table>
-                </div>
+<!-- ABOUT MODAL -->
+<div class="modal fade" id="aboutModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">ABOUT SENTINEL PRIME</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <p><strong>Sentinel Prime</strong> is a comprehensive cybersecurity suite developed by <strong>Krishna Shivhare</strong> at VIT Bhopal University.</p>
+                <ul>
+                    <li><strong>ShadowTrace Integration:</strong> Advanced IP geolocation and threat mapping.</li>
+                    <li><strong>Vault-X:</strong> Military-grade AES-256 encryption core for secure data storage.</li>
+                    <li><strong>Network Intelligence:</strong> Real-time traffic analysis and device discovery.</li>
+                </ul>
+                <p class="small text-info">Tech Stack: Python (Flask), SQLite, Chart.js, Vercel Serverless.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- HELP MODAL -->
+<div class="modal fade" id="helpModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">SYSTEM DOCUMENTATION (HELP)</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body small">
+                <p><strong>1. Encryption:</strong> Enter full file path and secret key in Vault-X. Click ENCRYPT to secure the file.</p>
+                <p><strong>2. Network Scan:</strong> Click INITIATE_SCAN to perform an ARP scan on the local subnet (10.106.204.0/24).</p>
+                <p><strong>3. Traffic Analysis:</strong> The doughnut chart shows protocol distribution (TCP/UDP/ICMP).</p>
+                <p><strong>4. Reports:</strong> Generate a PDF summary of the last 24h activity via DOWNLOAD_REPORT.</p>
             </div>
         </div>
     </div>
@@ -95,21 +119,13 @@
         <a href="https://github.com/krishnashivhare654-beep" target="_blank">GitHub</a> |
         <a href="https://www.coursera.org/account/accomplishments" target="_blank">Certifications</a>
     </div>
-    <p class="small text-muted mt-2">Projects: ShadowTrace & Sentinel Prime</p>
 </footer>
 
 <script>
     const ctx = document.getElementById('trafficChart').getContext('2d');
     new Chart(ctx, {
         type: 'doughnut',
-        data: {
-            labels: ['TCP', 'UDP', 'ICMP'],
-            datasets: [{
-                data: [65, 20, 15],
-                backgroundColor: ['#00f2ff', '#7000ff', '#ff0055'],
-                borderWidth: 0
-            }]
-        },
+        data: { labels: ['TCP', 'UDP', 'ICMP'], datasets: [{ data: [65, 20, 15], backgroundColor: ['#00f2ff', '#7000ff', '#ff0055'], borderWidth: 0 }] },
         options: { plugins: { legend: { display: false } } }
     });
 </script>
