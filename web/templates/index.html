@@ -2,14 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Sentinel Prime // Dashboard</title>
+    <title>Sentinel Prime // V2.3 Full Suite</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { background-color: #050505; color: #00f2ff; font-family: 'Courier New', monospace; }
         .card { background-color: #0a0a0a; border: 1px solid #00f2ff; border-radius: 0; margin-bottom: 20px; }
         .card-header { border-bottom: 1px solid #00f2ff; font-weight: bold; }
         footer { border-top: 1px solid #333; margin-top: 50px; padding: 30px; background: #0a0a0a; }
         footer a { color: #00f2ff; text-decoration: none; margin: 0 10px; }
+        .table { color: #00f2ff; font-size: 0.8rem; }
     </style>
 </head>
 <body>
@@ -23,20 +25,54 @@
 
 <div class="container mt-4">
     <div class="row">
+        <!-- VAULT_X & DARKWEB -->
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">>_ VAULT_X (AES-256)</div>
                 <div class="card-body">
                     <input type="text" class="form-control bg-dark text-info border-secondary mb-2" placeholder="FILE_PATH">
                     <button class="btn btn-outline-info btn-sm">ENCRYPT</button>
+                    <button class="btn btn-outline-danger btn-sm">DECRYPT</button>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">>_ TRAFFIC_ANALYTICS</div>
+                <div class="card-body">
+                    <canvas id="trafficChart" style="max-height: 200px;"></canvas>
                 </div>
             </div>
         </div>
+
+        <!-- DISCOVERED DEVICES -->
         <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">>_ DISCOVERED_DEVICES</div>
+                <div class="card-body">
+                    <table class="table table-dark table-borderless">
+                        <thead><tr><th>IP_ADDR</th><th>STATUS</th><th>PORTS</th></tr></thead>
+                        <tbody id="device-list"></tbody>
+                    </table>
+                </div>
+            </div>
             <div class="card">
                 <div class="card-header">>_ DARKWEB_MONITOR</div>
                 <div class="card-body" id="darkweb-logs">
-                    <p class="text-warning">Scanning for data leaks...</p>
+                    <p class="text-warning">Scanning network nodes...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LIVE PACKET STREAM -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">>_ LIVE_PACKET_STREAM</div>
+                <div class="card-body">
+                    <table class="table table-dark table-hover table-sm">
+                        <thead><tr><th>TIME</th><th>SOURCE_IP</th><th>DESTINATION_IP</th><th>PROTO</th></tr></thead>
+                        <tbody id="packet-stream"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -49,8 +85,32 @@
         <a href="https://github.com/krishnashivhare654-beep" target="_blank">GitHub</a> |
         <a href="https://www.coursera.org/account/accomplishments" target="_blank">Certifications</a>
     </div>
-    <p class="small text-muted mt-2">Projects: ShadowTrace & Sentinel Prime</p>
 </footer>
 
+<script>
+    // Logic to fetch and update data
+    function updateData() {
+        fetch('/api/traffic').then(res => res.json()).then(data => {
+            const tbody = document.getElementById('packet-stream');
+            tbody.innerHTML = data.map(p => `<tr><td>${p.time}</td><td>${p.src_ip}</td><td>${p.dst_ip}</td><td>${p.protocol}</td></tr>`).join('');
+        });
+        
+        fetch('/api/devices').then(res => res.json()).then(data => {
+            const dbody = document.getElementById('device-list');
+            dbody.innerHTML = data.map(d => `<tr><td>${d.ip}</td><td class="text-success">${d.status}</td><td>${d.ports}</td></tr>`).join('');
+        });
+    }
+
+    // Chart.js Setup
+    const ctx = document.getElementById('trafficChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: { labels: ['TCP', 'UDP', 'ICMP'], datasets: [{ data: [65, 25, 10], backgroundColor: ['#00f2ff', '#7000ff', '#ff0055'] }] },
+        options: { plugins: { legend: { labels: { color: '#00f2ff' } } } }
+    });
+
+    setInterval(updateData, 5000);
+    updateData();
+</script>
 </body>
 </html>
