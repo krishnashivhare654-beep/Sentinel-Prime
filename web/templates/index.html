@@ -2,31 +2,28 @@
 <html lang="en" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <title>Sentinel Prime // Security Hub</title>
+    <title>Sentinel Prime // Final Suite</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <style>
         :root { --neon-green: #00ff41; --bg-dark: #050505; }
-        body { transition: 0.3s; font-family: 'Segoe UI', sans-serif; min-height: 100vh; display: flex; flex-direction: column; }
+        body { transition: 0.3s; font-family: 'Segoe UI', sans-serif; min-height: 100vh; }
         
-        /* Theme specific colors */
         [data-bs-theme="dark"] body { background-color: var(--bg-dark); color: var(--neon-green); }
         [data-bs-theme="light"] body { background-color: #ffffff; color: #1a1a1a; }
         
-        .card { background-color: #0a0a0a; border: 1px solid var(--neon-green); transition: 0.3s; color: var(--neon-green); }
+        .card { background-color: #0a0a0a; border: 1px solid var(--neon-green); color: var(--neon-green); margin-bottom: 20px; }
         [data-bs-theme="light"] .card { background-color: #f8f9fa; border: 1px solid #1a1a1a; color: #1a1a1a; }
         
-        .card:hover { transform: scale(1.02); box-shadow: 0 0 15px rgba(0, 255, 65, 0.2); }
+        .navbar { border-bottom: 1px solid var(--neon-green); background-color: #000; }
+        [data-bs-theme="light"] .navbar { border-bottom: 1px solid #1a1a1a; background-color: #f8f9fa !important; }
+        
         .modal-content { background-color: #0a0a0a; border: 1px solid var(--neon-green); color: var(--neon-green); }
         [data-bs-theme="light"] .modal-content { background-color: #fff; border: 1px solid #1a1a1a; color: #1a1a1a; }
-        
-        .navbar { border-bottom: 1px solid var(--neon-green); }
-        [data-bs-theme="light"] .navbar { border-bottom: 1px solid #1a1a1a; }
 
-        footer { padding: 40px 0; border-top: 1px solid #333; background-color: #000; color: #fff; margin-top: auto; }
-        .footer-links a { color: #ccc; text-decoration: none; display: block; margin-bottom: 5px; font-size: 0.9rem; }
-        .footer-links a:hover { color: var(--neon-green); }
+        footer { padding: 40px 0; background-color: #000; color: #fff; border-top: 1px solid #333; }
+        .footer-links a { color: #ccc; text-decoration: none; display: block; margin-bottom: 5px; }
     </style>
 </head>
 <body>
@@ -36,42 +33,42 @@
         <a class="navbar-brand text-success fw-bold" href="#">SENTINEL PRIME v2.3</a>
         <div class="collapse navbar-collapse">
             <ul class="navbar-nav me-auto">
-                <li class="nav-item"><a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#docModal">Documentation</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#aboutModal">About</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#helpModal">Help</a></li>
                 <li class="nav-item"><a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#contactModal">Contact</a></li>
             </ul>
-            <button class="btn btn-outline-success btn-sm me-2" onclick="toggleTheme()" id="themeBtn">🌙 Switch to Light Mode</button>
-            <button class="btn btn-success btn-sm">INITIATE SCAN</button>
+            <div class="d-flex">
+                <button class="btn btn-outline-success btn-sm me-2" onclick="toggleTheme()" id="themeBtn">🌙 Switch Theme</button>
+                <a href="/api/download_report" class="btn btn-success btn-sm me-2">DOWNLOAD_REPORT.PDF</a>
+                <button class="btn btn-primary btn-sm">INITIATE_SCAN</button>
+            </div>
         </div>
     </div>
 </nav>
 
-<div class="container mt-5">
-    <div class="row g-4">
-        <!-- VAULT_X -->
+<div class="container mt-4">
+    <div class="row">
         <div class="col-md-6">
-            <div class="card h-100 p-4">
+            <div class="card p-4">
                 <h5>>_ VAULT_X (AES-256)</h5>
-                <input type="text" class="form-control bg-transparent border-secondary text-success mb-2" placeholder="FULL_FILE_PATH">
-                <input type="password" class="form-control bg-transparent border-secondary text-success mb-3" placeholder="SECRET_ENCRYPTION_KEY">
+                <input type="text" class="form-control bg-transparent text-success mb-2" placeholder="FILE_PATH">
+                <input type="password" class="form-control bg-transparent text-success mb-3" placeholder="KEY">
                 <div class="d-flex"><button class="btn btn-success me-2">ENCRYPT</button><button class="btn btn-outline-danger">DECRYPT</button></div>
             </div>
         </div>
-        <!-- ANALYTICS -->
         <div class="col-md-6">
-            <div class="card h-100 p-4 text-center">
+            <div class="card p-4 text-center">
                 <h5>>_ TRAFFIC_ANALYTICS</h5>
-                <div class="d-flex justify-content-center"><canvas id="trafficChart" style="max-height: 180px;"></canvas></div>
+                <div class="d-flex justify-content-center"><canvas id="trafficChart" style="max-height: 150px;"></canvas></div>
             </div>
         </div>
-        <!-- DEVICES TABLE -->
         <div class="col-md-12">
             <div class="card p-4">
-                <h5>>_ DISCOVERED_DEVICES & VULNERABILITY_INTEL</h5>
-                <table class="table table-transparent mt-3" style="color: inherit;">
-                    <thead><tr><th>IP_ADDR</th><th>STATUS</th><th>OPEN_PORTS</th><th>RISK</th></tr></thead>
+                <h5>>_ DISCOVERED_DEVICES</h5>
+                <table class="table table-transparent mt-2" style="color: inherit;">
+                    <thead><tr><th>IP_ADDR</th><th>STATUS</th><th>PORTS</th></tr></thead>
                     <tbody>
-                        <tr><td>10.106.204.1</td><td class="text-success">ONLINE</td><td>80, 443</td><td><span class="badge bg-success">LOW</span></td></tr>
-                        <tr><td>10.106.204.45</td><td class="text-success">ONLINE</td><td>8080</td><td><span class="badge bg-warning text-dark">MEDIUM</span></td></tr>
+                        <tr><td>10.106.204.1</td><td class="text-success">ONLINE</td><td>80, 443</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -79,40 +76,33 @@
     </div>
 </div>
 
-<!-- MODALS (Contact & Doc) -->
-<div class="modal fade" id="contactModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
-    <div class="modal-header"><h5>CONTACT</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
-    <div class="modal-body text-center"><h4>📞 +91 9351069427</h4><a href="https://instagram.com/s_krish09" target="_blank" class="btn btn-success mt-3">Instagram @s_krish09</a></div>
+<!-- MODALS -->
+<div class="modal fade" id="aboutModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5>ABOUT</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">Developed by Krishna Shivhare. Sentinel Prime is a cyber security suite focusing on network intelligence and data encryption.</div>
 </div></div></div>
 
-<div class="modal fade" id="docModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
-    <div class="modal-header"><h5>DOCUMENTATION</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
-    <div class="modal-body"><h6>AES-256 Encryption</h6><p>Vault-X uses military-grade encryption for file security.</p><h6>Network Discovery</h6><p>Real-time ARP monitoring for device intelligence.</p></div>
+<div class="modal fade" id="helpModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5>HELP & DOCUMENTATION</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">Use Vault-X to secure files with AES-256. Click Initiate Scan to discover devices. Use Download Report to save session logs.</div>
+</div></div></div>
+
+<div class="modal fade" id="contactModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5>CONTACT</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body text-center"><h4>📞 +91 9351069427</h4><p>Instagram: @s_krish09</p></div>
 </div></div></div>
 
 <footer>
-    <div class="container">
-        <div class="row">
-            <div class="col-md-3 footer-links"><h6>Features</h6><a href="#">Encryption Engine</a><a href="#">Packet Sniffer</a></div>
-            <div class="col-md-3 footer-links"><h6>Get Started</h6><a href="#">Pricing</a><a href="#">API Access</a></div>
-            <div class="col-md-3 footer-links"><h6>Support</h6><a href="#" data-bs-toggle="modal" data-bs-target="#docModal">Documentation</a><a href="#" data-bs-toggle="modal" data-bs-target="#contactModal">Contact Support</a></div>
-            <div class="col-md-3 footer-links"><h6>Quick Links</h6><a href="https://github.com/krishnashivhare654-beep" target="_blank">GitHub Profile</a></div>
-        </div>
-        <div class="text-center mt-4 border-top pt-3 small opacity-50">© 2026 Sentinel Prime | Krishna Shivhare | VIT Bhopal University</div>
+    <div class="container text-center">
+        <p>© 2026 Sentinel Prime | Krishna Shivhare | VIT Bhopal University</p>
     </div>
 </footer>
 
 <script>
     function toggleTheme() {
         const html = document.documentElement;
-        const btn = document.getElementById('themeBtn');
-        if (html.getAttribute('data-bs-theme') === 'dark') {
-            html.setAttribute('data-bs-theme', 'light');
-            btn.innerHTML = '🌞 Switch to Dark Mode';
-        } else {
-            html.setAttribute('data-bs-theme', 'dark');
-            btn.innerHTML = '🌙 Switch to Light Mode';
-        }
+        const current = html.getAttribute('data-bs-theme');
+        html.setAttribute('data-bs-theme', current === 'dark' ? 'light' : 'dark');
     }
     const ctx = document.getElementById('trafficChart').getContext('2d');
     new Chart(ctx, {
