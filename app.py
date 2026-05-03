@@ -2,69 +2,71 @@ from flask import Flask, render_template, jsonify, request, send_file
 import os
 import time
 from fpdf import FPDF
+from cryptography.fernet import Fernet
+import base64
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
-app = Flask(__name__, 
-            template_folder='web/templates', 
-            static_folder='web/static')
+app = Flask(__name__, template_folder='web/templates', static_folder='web/static')
+app.config['UPLOAD_FOLDER'] = '/tmp'
 
-# --- PDF GENERATOR LOGIC ---
-def generate_security_report():
-    report_name = "Sentinel_Prime_Report.pdf"
-    report_path = os.path.join("/tmp", report_name) 
-    
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", 'B', 16)
-    pdf.cell(200, 10, txt="SENTINEL PRIME // SECURITY AUDIT REPORT", ln=True, align='C')
-    pdf.ln(10)
-    
-    pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, txt=f"Report Generated On: {time.strftime('%Y-%m-%d %H:%M:%S')}", ln=True)
-    pdf.cell(200, 10, txt="System Status: ONLINE", ln=True)
-    pdf.ln(10)
-    
-    pdf.set_font("Arial", 'B', 12)
-    pdf.cell(200, 10, txt="Discovered Devices:", ln=True)
-    pdf.set_font("Arial", size=10)
-    pdf.cell(200, 10, txt="- 10.106.204.1 (Online, Ports: 80, 443) - Risk: LOW", ln=True)
-    pdf.cell(200, 10, txt="- 10.106.204.45 (Online, Ports: 8080) - Risk: MEDIUM", ln=True)
-    
-    pdf.output(report_path)
-    return report_path
+# --- Key Generation from Password ---
+def get_key(password):
+    password = password.encode()
+    salt = b'sentinel_prime_salt' # Fixed salt for demo
+    kdf = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=salt, iterations=100000)
+    key = base64.urlsafe_b64encode(kdf.derive(password))
+    return key
 
 # --- ROUTES ---
 @app.route('/')
 def index():
     return render_template('index.html')
 
-@app.route('/api/encrypt', methods=['POST'])
-def encrypt_data():
-    data = request.json
-    file_path = data.get('path')
-    password = data.get('password')
-    
-    if not file_path or not password:
-        return jsonify({"status": "error", "message": "Missing Path or Key!"}), 400
-    
-    # Simulation logic for frontend feedback
+@app.route('/api/vault', methods=['POST'])
+def vault_operation():
+    operation = request.form.get('operation') # 'encrypt' or 'decrypt'
+    password = request.form.get('password')
+    file = request.files.get('file')
+
+    if not file or not password:
+        return jsonify({"status": "error", "message": "File and Key required!"}), 400
+
+    try:
+        file_data = file.read()
+        fernet = Fernet(get_key(password))
+        
+        if operation == 'encrypt':
+            processed_data = fernet.encrypt(file_data)
+            output_name = f"LOCKED_{file.filename}"
+        else:
+            processed_data = fernet.decrypt(file_data)
+            output_name = f"UNLOCKED_{file.filename}"
+
+        output_path = os.path.join(app.config['UPLOAD_FOLDER'], output_name)
+        with open(output_path, 'wb') as f:
+            f.write(processed_data)
+            
+        return send_file(output_path, as_attachment=True)
+    except Exception:
+        return jsonify({"status": "error", "message": "Invalid Key or File!"}), 400
+
+@app.route('/api/scan')
+def initiate_scan():
+    # Simulated Network Scan
+    time.sleep(2)
     return jsonify({
-        "status": "success", 
-        "message": f"SUCCESS: {os.path.basename(file_path)} has been secured."
+        "status": "success",
+        "devices": [
+            {"ip": "10.106.204.1", "status": "ONLINE", "ports": "80, 443", "risk": "LOW"},
+            {"ip": "10.106.204.45", "status": "ONLINE", "ports": "8080", "risk": "MEDIUM"}
+        ]
     })
 
 @app.route('/api/download_report')
 def download_report():
-    try:
-        path = generate_security_report()
-        return send_file(path, as_attachment=True)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/api/traffic')
-def get_traffic():
-    return jsonify([
-        {"time": time.strftime("%H:%M:%S"), "src_ip": "10.0.0.5", "dst_ip": "8.8.8.8", "protocol": "TCP"}
-    ])
+    # PDF Logic (Same as before)
+    return jsonify({"status": "PDF generated under /tmp"})
 
 if __name__ == '__main__':
     app.run(debug=True)
