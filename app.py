@@ -1,21 +1,32 @@
 from flask import Flask, render_template, jsonify, request, send_file
 import os
 import time
+import base64
 from fpdf import FPDF
 from cryptography.fernet import Fernet
-import base64
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 app = Flask(__name__, template_folder='web/templates', static_folder='web/static')
-app.config['UPLOAD_FOLDER'] = '/tmp'
+
+# Vercel fix: Ensure /tmp directory exists for temporary file processing
+TMP_DIR = '/tmp'
+if not os.path.exists(TMP_DIR):
+    os.makedirs(TMP_DIR)
+
+app.config['UPLOAD_FOLDER'] = TMP_DIR
 
 # --- Key Generation from Password ---
 def get_key(password):
-    password = password.encode()
-    salt = b'sentinel_prime_salt' # Fixed salt for demo
-    kdf = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=salt, iterations=100000)
-    key = base64.urlsafe_b64encode(kdf.derive(password))
+    password_bytes = password.encode()
+    salt = b'sentinel_prime_salt_fixed'  # Use a fixed salt for decryption consistency
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=salt,
+        iterations=100000,
+    )
+    key = base64.urlsafe_b64encode(kdf.derive(password_bytes))
     return key
 
 # --- ROUTES ---
@@ -25,7 +36,7 @@ def index():
 
 @app.route('/api/vault', methods=['POST'])
 def vault_operation():
-    operation = request.form.get('operation') # 'encrypt' or 'decrypt'
+    operation = request.form.get('operation')
     password = request.form.get('password')
     file = request.files.get('file')
 
@@ -48,13 +59,13 @@ def vault_operation():
             f.write(processed_data)
             
         return send_file(output_path, as_attachment=True)
-    except Exception:
-        return jsonify({"status": "error", "message": "Invalid Key or File!"}), 400
+    except Exception as e:
+        return jsonify({"status": "error", "message": "Invalid Key or Corrupted File!"}), 400
 
 @app.route('/api/scan')
 def initiate_scan():
-    # Simulated Network Scan
-    time.sleep(2)
+    # Simulated active scan response
+    time.sleep(1.5)
     return jsonify({
         "status": "success",
         "devices": [
@@ -65,8 +76,20 @@ def initiate_scan():
 
 @app.route('/api/download_report')
 def download_report():
-    # PDF Logic (Same as before)
-    return jsonify({"status": "PDF generated under /tmp"})
+    report_name = "Sentinel_Prime_Audit.pdf"
+    report_path = os.path.join(TMP_DIR, report_name)
+    
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", 'B', 16)
+    pdf.cell(200, 10, txt="SENTINEL PRIME // SECURITY REPORT", ln=True, align='C')
+    pdf.ln(10)
+    pdf.set_font("Arial", size=12)
+    pdf.cell(200, 10, txt=f"Generated On: {time.strftime('%Y-%m-%d %H:%M:%S')}", ln=True)
+    pdf.cell(200, 10, txt="Developer: Krishna Shivhare (VIT Bhopal)", ln=True)
+    pdf.output(report_path)
+    
+    return send_file(report_path, as_attachment=True)
 
 if __name__ == '__main__':
     app.run(debug=True)
