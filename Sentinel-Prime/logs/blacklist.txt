@@ -1,2 +1,0 @@
-Thu Apr 30 19:52:19 2026 - THREAT: High Traffic: 74250 pkts/30s from 10.16.71.2
-Thu Apr 30 19:52:19 2026 - THREAT: High Traffic: 509 pkts/30s from 10.16.71.25
